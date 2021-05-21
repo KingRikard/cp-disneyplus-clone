@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import styled from 'styled-components';
 import { useDispatch, useSelector } from "react-redux";
 import { useHistory } from "react-router-dom";
@@ -15,16 +16,36 @@ const Header = (props) => {
     const userName = useSelector(selectUserName);
     const userPhoto = useSelector(selectUserPhoto);
 
-    const handleAuth = () => {
-        auth
-            .signInWithPopup(provider)
-            .then((result) => {
-                setUser(result.user);
+useEffect(() => {
+    auth.onAuthStateChanged(async (user) => {
+        if(user) {
+            setUser(user)
+            history.push('/home/')
+        }
+    })
+
+}, [userName]);
+
+const handleAuth = () => {
+    if (!userName) {
+      auth
+        .signInWithPopup(provider)
+        .then((result) => {
+          setUser(result.user);
         })
-            .catch((error) => {
-            alert(error.message);
+        .catch((error) => {
+          alert(error.message);
         });
-    };
+    } else if (userName) {
+      auth
+        .signOut()
+        .then(() => {
+          dispatch(setSignOutState());
+          history.push("/");
+        })
+        .catch((err) => alert(err.message));
+    }
+  };
 
 const setUser = (user) => {
     dispatch(
